@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import type { Vehicle, Stage } from './types'
+import NewVehicleForm from './components/NewVehicleForm'
 import { 
   BrowserRouter as Router, 
   Routes, 
@@ -24,15 +27,15 @@ import {
   Wrench,
   Search,
   TrendingUp,
-  CreditCard,
+
   Box,
-  Truck,
+
   Menu,
-  X,
+
   Download,
   Calendar,
   Phone,
-  MessageCircle,
+
   CheckCircle2,
   Lock,
   Mail,
@@ -41,20 +44,6 @@ import {
   CalendarDays,
   Building
 } from 'lucide-react'
-
-// --- Types ---
-type Stage = 'reception' | 'diagnosis' | 'execution' | 'quality' | 'ready';
-
-interface Vehicle {
-  id: string;
-  plate: string;
-  model: string;
-  client: string;
-  stage: Stage;
-  entryDate: string;
-  priority: 'low' | 'medium' | 'high';
-  price?: number;
-}
 
 // --- Constants ---
 const WORKSHOP_SERVICES = [
@@ -122,7 +111,7 @@ const Login = ({ onLogin }: { onLogin: () => void }) => {
           <div style={{ background: 'var(--primary)', width: '70px', height: '70px', borderRadius: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 10px 20px -5px rgba(0, 158, 199, 0.4)' }}>
             <Wrench size={36} color="white" />
           </div>
-          <h1 style={{ color: 'var(--color-dark)', fontSize: '2rem', fontStyle: 'italic', fontStyle: 'italic' }}>AutoFlow</h1>
+          <h1 style={{ color: 'var(--color-dark)', fontSize: '2rem', fontStyle: 'italic' }}>AutoFlow</h1>
           <p className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Inicia sesión en tu gestión operativa</p>
         </div>
         
@@ -211,7 +200,7 @@ const Register = () => {
 
 // --- Booking Module ---
 
-const BookingView = () => {
+const BookingView = ({ onBookingConfirm }: { onBookingConfirm: (vehicle: Omit<Vehicle, 'id'>) => void }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({ clientName: '', phone: '', vehicle: '', date: '', time: '', selectedServices: [] as string[] });
 
@@ -327,7 +316,21 @@ const BookingView = () => {
             </div>
             <div style={{ display: 'flex', gap: '1rem', marginTop: '3.5rem' }}>
               <button className="btn" style={{ background: 'var(--background)', flex: 1 }} onClick={() => setStep(2)}>VOLVER</button>
-              <button className="btn btn-primary" style={{ flex: 2, background: 'var(--success)', padding: '1.15rem' }} onClick={() => { alert('Cita Confirmada en el Sistema'); setStep(1); setFormData({clientName: '', phone: '', vehicle: '', date: '', time: '', selectedServices: []}); }}>CONFIRMAR RESERVA <CheckCircle2 size={18} /></button>
+              <button className="btn btn-primary" style={{ flex: 2, background: 'var(--success)', padding: '1.15rem' }} onClick={() => { 
+                const newVehicle: Omit<Vehicle, 'id'> = {
+                  plate: formData.vehicle.split('/')[0]?.trim() || 'SIN-PLACA',
+                  model: formData.vehicle.split('/')[1]?.trim() || 'Modelo Desconocido',
+                  client: formData.clientName,
+                  stage: 'reception',
+                  entryDate: formData.date || new Date().toISOString().split('T')[0],
+                  priority: 'medium',
+                  price: 0
+                };
+                onBookingConfirm(newVehicle);
+                alert('Cita Confirmada en el Sistema'); 
+                setStep(1); 
+                setFormData({clientName: '', phone: '', vehicle: '', date: '', time: '', selectedServices: []}); 
+              }}>CONFIRMAR RESERVA <CheckCircle2 size={18} /></button>
             </div>
           </div>
         )}
@@ -338,12 +341,35 @@ const BookingView = () => {
 
 // --- Operational Modules ---
 
-const DashboardView = ({ vehicles, setVehicles }: any) => {
+const DashboardView = ({ vehicles, setVehicles }: { vehicles: Vehicle[], setVehicles: Dispatch<SetStateAction<Vehicle[]>> }) => {
+  const [showNewVehicleModal, setShowNewVehicleModal] = useState(false);
+
   const moveVehicle = (id: string, newStage: Stage) => {
-    setVehicles((prev: Vehicle[]) => prev.map(v => v.id === id ? { ...v, stage: newStage } : v));
+    setVehicles((prev) => prev.map(v => v.id === id ? { ...v, stage: newStage } : v));
   };
+  
+  const handleAddNew = (vehicleData: Omit<Vehicle, 'id'>) => {
+    // Generate a random ID (in production use uuid)
+    const newVehicle: Vehicle = { 
+      ...vehicleData, 
+      id: Math.random().toString(36).substr(2, 9),
+      // Ensure stage is typed correctly if omitted or needs override
+      stage: 'reception', 
+      price: vehicleData.price || 0
+    }; 
+    setVehicles(prev => [...prev, newVehicle]);
+    setShowNewVehicleModal(false);
+  };
+
   return (
     <>
+      {showNewVehicleModal && (
+        <NewVehicleForm 
+          onClose={() => setShowNewVehicleModal(false)}
+          onSubmit={handleAddNew}
+        />
+      )}
+
       <header className="flex-row" style={{ justifyContent: 'space-between', marginBottom: '3rem', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
           <span style={{ color: 'var(--primary)', fontWeight: 900, fontSize: '0.8rem', letterSpacing: '0.2em' }}>PANEL DE CONTROL</span>
@@ -351,7 +377,7 @@ const DashboardView = ({ vehicles, setVehicles }: any) => {
           <p className="text-muted" style={{ fontStyle: 'italic', fontWeight: 500 }}>Estado del flujo de trabajo en tiempo real</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', width: '100%', maxWidth: 'fit-content' }}>
-          <button className="btn btn-primary" style={{ flex: 1, padding: '0.85rem 1.5rem' }}><Plus size={18} /> NUEVO INGRESO</button>
+          <button className="btn btn-primary" style={{ flex: 1, padding: '0.85rem 1.5rem' }} onClick={() => setShowNewVehicleModal(true)}><Plus size={18} /> NUEVO INGRESO</button>
           <button className="btn" style={{ background: 'var(--surface-dark)', color: 'white', flex: 1, padding: '0.85rem 1.5rem' }} onClick={() => generatePDFReport(vehicles)}><Download size={18} /> EXPORTAR PDF</button>
         </div>
       </header>
@@ -365,12 +391,12 @@ const DashboardView = ({ vehicles, setVehicles }: any) => {
         </div>
         <div className="card">
           <h3 className="text-muted" style={{ fontWeight: 800 }}>PROCESOS EN CURSO</h3>
-          <div style={{ fontSize: '3.75rem', fontWeight: 900, color: 'var(--primary)', fontStyle: 'italic', margin: '0.5rem 0' }}>{vehicles.filter((v: any) => ['diagnosis', 'execution'].includes(v.stage)).length}</div>
+          <div style={{ fontSize: '3.75rem', fontWeight: 900, color: 'var(--primary)', fontStyle: 'italic', margin: '0.5rem 0' }}>{vehicles.filter(v => ['diagnosis', 'execution'].includes(v.stage)).length}</div>
           <div className="flex-row mt-1"><Clock size={16} className="text-muted" /><span className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Eficiencia: 92%</span></div>
         </div>
         <div className="card">
           <h3 className="text-muted" style={{ fontWeight: 800 }}>CITAS PARA HOY</h3>
-          <div style={{ fontSize: '3.75rem', fontWeight: 900, color: 'var(--success)', fontStyle: 'italic', margin: '0.5rem 0' }}>{vehicles.filter((v: any) => v.stage === 'ready').length}</div>
+          <div style={{ fontSize: '3.75rem', fontWeight: 900, color: 'var(--success)', fontStyle: 'italic', margin: '0.5rem 0' }}>{vehicles.filter(v => v.stage === 'ready').length}</div>
           <p className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 700 }}>Egresos programados</p>
         </div>
       </section>
@@ -380,9 +406,9 @@ const DashboardView = ({ vehicles, setVehicles }: any) => {
           <div key={stage.id} className="stage-column">
             <div className="stage-header">
               <h3 style={{ fontSize: '0.85rem', fontWeight: 900 }}>{stage.label.toUpperCase()}</h3>
-              <span className="badge" style={{ background: stage.color, color: 'white' }}>{vehicles.filter((v: any) => v.stage === stage.id).length}</span>
+              <span className="badge" style={{ background: stage.color, color: 'white' }}>{vehicles.filter(v => v.stage === stage.id).length}</span>
             </div>
-            {vehicles.filter((v: any) => v.stage === stage.id).map((vehicle: any) => (
+            {vehicles.filter(v => v.stage === stage.id).map(vehicle => (
               <div key={vehicle.id} className={`card vehicle-card ${vehicle.stage}`} style={{ padding: '1.5rem', animation: 'fadeIn 0.3s ease' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                   <strong style={{ fontSize: '1.2rem', fontStyle: 'italic', fontWeight: 900 }}>{vehicle.plate}</strong>
@@ -601,7 +627,10 @@ function App() {
             <button className="mobile-nav-toggle" onClick={() => setSidebarOpen(true)}><Menu size={24} /><span style={{ fontWeight: 900, fontSize: '0.8rem', letterSpacing: '0.05em' }}>NAV PANEL</span></button>
             <Routes>
               <Route path="/" element={<DashboardView vehicles={vehicles} setVehicles={setVehicles} />} />
-              <Route path="/booking" element={<BookingView />} />
+              <Route path="/booking" element={<BookingView onBookingConfirm={(v) => {
+                const newVehicle: Vehicle = { ...v, id: Math.random().toString(36).substr(2, 9), stage: 'reception' };
+                setVehicles(prev => [...prev, newVehicle]);
+              }} />} />
               <Route path="/vehicles" element={<VehiclesView vehicles={vehicles} />} />
               <Route path="/inventory" element={<InventoryView />} />
               <Route path="/billing" element={<BillingView vehicles={vehicles} />} />
