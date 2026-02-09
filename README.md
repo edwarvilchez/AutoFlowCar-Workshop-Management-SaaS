@@ -27,9 +27,12 @@ AutoFlow es una plataforma integral de gestión para talleres mecánicos de alto
 - **Control de Insumos:** Seguimiento detallado de piezas y consumibles.
 - **Alertas Visuales:** Identificación inmediata de stock crítico (rojo) y niveles óptimos.
 
-### 💰 Facturación y Exportación de Datos
+### 💰 Facturación y Análisis Financiero
 
-- **Módulo Financiero:** Resumen de facturado, cuentas por cobrar y métodos de pago.
+- **Módulo Financiero Dual Currency:**
+  - Visualización de ingresos totales y facturación pendiente en **USD** y **Bolívares (VES)** simultáneamente.
+  - Configuración centralizada de **Tasa de Cambio** con persistencia local.
+  - Gestión crud de **Métodos de Pago** (Transferencia, Pago Móvil, Zelle, Efectivo, Cripto).
 - **Reportes PDF:** Generación de informes profesionales con un solo clic, incluyendo tablas detalladas de servicios y métricas de ventas.
 
 ## 🎨 Diseño y Experiencia de Usuario (UI/UX)
@@ -37,11 +40,12 @@ AutoFlow es una plataforma integral de gestión para talleres mecánicos de alto
 - **Estética High-Tech:** Basado en el concepto de _Glassmorphism_ y alto contraste.
 - **Tipografía Dinámica:** Uso de **Montserrat** con estilos audaces para transmitir velocidad y precisión.
 - **Responsividad Total:** Adaptado perfectamente para Desktop, Tablets y Smartphones con una barra lateral inteligente.
-- **Formularios Premium:** Campos de entrada diseñados para la máxima comodidad y claridad visual.
+- **Formularios Premium:** Campos de entrada diseñados para la máxima comodidad y claridad visual con validaciones en tiempo real.
 
 ## 🛠️ Stack Tecnológico
 
 - **Core:** React 19 + TypeScript.
+- **State Management:** Custom Hooks (`useVehicles`, `useFinancial`) + React Context pattern ready.
 - **Routing:** React Router 7.
 - **Iconografía:** Lucide React.
 - **Engine PDF:** jsPDF + AutoTable.

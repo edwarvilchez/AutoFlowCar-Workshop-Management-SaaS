@@ -17,8 +17,22 @@ const NewVehicleForm = ({ onClose, onSubmit }: NewVehicleFormProps) => {
     price: 0
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.plate.trim()) newErrors.plate = 'La placa es obligatoria';
+    if (!formData.model.trim()) newErrors.model = 'El modelo es obligatorio';
+    if (!formData.client.trim()) newErrors.client = 'El nombre del cliente es obligatorio';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
+
     onSubmit({
       ...formData,
       stage: 'reception', // Default stage for new entries
@@ -27,8 +41,8 @@ const NewVehicleForm = ({ onClose, onSubmit }: NewVehicleFormProps) => {
   };
 
   return (
-    <div className="mobile-overlay open" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-      <div className="card" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem', position: 'relative', animation: 'fadeIn 0.3s ease' }}>
+    <div className="mobile-overlay open">
+      <div className="card" style={{ width: '100%', maxWidth: '500px', position: 'relative' }}>
         <button 
           onClick={onClose}
           style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
@@ -36,52 +50,61 @@ const NewVehicleForm = ({ onClose, onSubmit }: NewVehicleFormProps) => {
           <X size={24} />
         </button>
 
-        <h2 style={{ marginBottom: '2rem', fontSize: '1.5rem' }}>Nuevo Ingreso</h2>
+        <h2>Nuevo Ingreso</h2>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
           <div className="form-group">
             <label className="form-label">Placa del Vehículo</label>
-            <div className="input-container">
+            <div className="input-container" style={{ borderColor: errors.plate ? 'var(--error)' : 'transparent' }}>
               <Car size={18} className="input-icon" />
               <input 
-                required
                 type="text" 
                 className="input-field" 
                 placeholder="ABC-123"
                 value={formData.plate}
-                onChange={e => setFormData({...formData, plate: e.target.value.toUpperCase()})}
+                onChange={e => {
+                  setFormData({...formData, plate: e.target.value.toUpperCase()});
+                  if (errors.plate) setErrors({...errors, plate: ''});
+                }}
               />
             </div>
+            {errors.plate && <span style={{ color: 'var(--error)', fontSize: '0.75rem', marginLeft: '0.5rem' }}>{errors.plate}</span>}
           </div>
 
           <div className="form-group">
              <label className="form-label">Modelo / Descripción</label>
-             <div className="input-container">
+             <div className="input-container" style={{ borderColor: errors.model ? 'var(--error)' : 'transparent' }}>
                <Car size={18} className="input-icon" />
                <input 
-                 required
                  type="text" 
                  className="input-field" 
                  placeholder="Ej: Toyota Corolla 2020"
                  value={formData.model}
-                 onChange={e => setFormData({...formData, model: e.target.value})}
+                 onChange={e => {
+                   setFormData({...formData, model: e.target.value});
+                   if (errors.model) setErrors({...errors, model: ''});
+                 }}
                />
              </div>
+             {errors.model && <span style={{ color: 'var(--error)', fontSize: '0.75rem', marginLeft: '0.5rem' }}>{errors.model}</span>}
           </div>
 
           <div className="form-group">
             <label className="form-label">Cliente</label>
-            <div className="input-container">
+            <div className="input-container" style={{ borderColor: errors.client ? 'var(--error)' : 'transparent' }}>
               <User size={18} className="input-icon" />
               <input 
-                required
                 type="text" 
                 className="input-field" 
                 placeholder="Nombre del Cliente"
                 value={formData.client}
-                onChange={e => setFormData({...formData, client: e.target.value})}
+                onChange={e => {
+                  setFormData({...formData, client: e.target.value});
+                  if (errors.client) setErrors({...errors, client: ''});
+                }}
               />
             </div>
+            {errors.client && <span style={{ color: 'var(--error)', fontSize: '0.75rem', marginLeft: '0.5rem' }}>{errors.client}</span>}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -115,9 +138,9 @@ const NewVehicleForm = ({ onClose, onSubmit }: NewVehicleFormProps) => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-            <button type="button" className="btn" style={{ flex: 1, background: 'var(--background)' }} onClick={onClose}>CANCELAR</button>
-            <button type="submit" className="btn btn-primary" style={{ flex: 2, padding: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <button type="button" className="btn" onClick={onClose}>CANCELAR</button>
+            <button type="submit" className="btn btn-primary">
               REGISTRAR INGRESO <CheckCircle2 size={18} />
             </button>
           </div>
