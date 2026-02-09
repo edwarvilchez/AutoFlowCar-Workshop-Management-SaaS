@@ -1,24 +1,14 @@
 import { useState, useEffect } from 'react';
 import type { Vehicle } from '../types';
-
-const STORAGE_KEY = 'sgt:vehicles';
+import { storage } from '../lib/storage';
 
 export const useVehicles = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
+    return storage.vehicles.get();
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(vehicles));
-    } catch (error) {
-      console.error('Failed to save vehicles to persistence:', error);
-    }
+    storage.vehicles.set(vehicles);
   }, [vehicles]);
 
   const addVehicle = (vehicle: Vehicle) => {
@@ -37,7 +27,7 @@ export const useVehicles = () => {
 
   return {
     vehicles,
-    setVehicles, // Keep this for now for compatibility with existing code that passes the setter directly
+    setVehicles,
     addVehicle,
     updateVehicle,
     deleteVehicle

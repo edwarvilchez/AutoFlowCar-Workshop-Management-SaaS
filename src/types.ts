@@ -5,16 +5,7 @@ export type Stage =
   | "quality"
   | "ready";
 
-export interface Vehicle {
-  id: string;
-  plate: string;
-  model: string;
-  client: string;
-  stage: Stage;
-  entryDate: string;
-  priority: "low" | "medium" | "high";
-  price?: number;
-}
+// Original Vehicle definition removed to avoid duplication. See bottom of file.
 
 // Extended types for Vehicle History
 export interface ServiceRecord {
@@ -63,3 +54,31 @@ export interface FinancialConfig {
   exchangeRate: number; // Tasa de cambio (VES/USD)
   lastUpdated: string;
 }
+
+// Budget Types
+export interface BudgetItem {
+  id: string;
+  description: string;
+  category: 'parts' | 'labor';
+  cost: number;
+}
+
+export interface VehicleBudget {
+  items: BudgetItem[];
+  total: number;
+  isApproved: boolean; // Controls advance to next stage
+  createdAt: string;
+}
+
+export interface Vehicle {
+  id: string;
+  plate: string;
+  model: string;
+  client: string;
+  stage: Stage;
+  entryDate: string;
+  priority: "low" | "medium" | "high";
+  price?: number;
+  budget?: VehicleBudget; // Linked budget
+}
+

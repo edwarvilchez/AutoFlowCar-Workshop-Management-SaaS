@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Vehicle, Stage } from '../types'
 import NewVehicleForm from '../components/NewVehicleForm'
-import { AlertCircle, Plus, Download } from 'lucide-react'
+import BudgetModal from '../components/BudgetModal';
+import { AlertCircle, Plus, Download, FileText } from 'lucide-react'
 import { STAGES } from '../lib/constants'
 import { generatePDFReport } from '../lib/report'
 
@@ -13,13 +14,26 @@ interface DashboardProps {
 
 const DashboardView = ({ vehicles, setVehicles }: DashboardProps) => {
   const [showNewVehicleModal, setShowNewVehicleModal] = useState(false);
+  const [editingBudgetVehicle, setEditingBudgetVehicle] = useState<Vehicle | null>(null);
 
   const moveVehicle = (id: string, newStage: Stage) => {
+    const vehicle = vehicles.find(v => v.id === id);
+    if (!vehicle) return;
+
+    // Budget Approval Check
+    if (vehicle.stage === 'diagnosis' && newStage === 'execution') {
+      if (!vehicle.budget?.isApproved) {
+        alert('⛔ Bloqueo de Proceso: No se puede avanzar a EJECUCIÓN sin un presupuesto aprobado por el cliente.');
+        return;
+      }
+    }
+
     setVehicles((prev) => prev.map(v => v.id === id ? { ...v, stage: newStage } : v));
   };
   
   const handleAddNew = (vehicleData: Omit<Vehicle, 'id'>) => {
-    const newVehicle: Vehicle = { 
+     // ... (existing logic)
+     const newVehicle: Vehicle = { 
       ...vehicleData, 
       id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2,9),
       stage: 'reception', 
@@ -28,6 +42,11 @@ const DashboardView = ({ vehicles, setVehicles }: DashboardProps) => {
     setVehicles(prev => [...prev, newVehicle]);
     setShowNewVehicleModal(false);
   };
+  
+  const handleUpdateVehicle = (updated: Vehicle) => {
+    setVehicles(prev => prev.map(v => v.id === updated.id ? updated : v));
+  };
+
 
   return (
     <>
@@ -38,6 +57,15 @@ const DashboardView = ({ vehicles, setVehicles }: DashboardProps) => {
         />
       )}
 
+      {editingBudgetVehicle && (
+        <BudgetModal 
+          vehicle={editingBudgetVehicle}
+          onClose={() => setEditingBudgetVehicle(null)}
+          onUpdateVehicle={handleUpdateVehicle}
+        />
+      )}
+
+      {/* ... Header and Stats sections remain same ... */}
       <header className="flex-row space-between wrap gap-1-5 mb-3">
         <div>
           <span className="badge badge-highlight">PANEL DE CONTROL</span>
@@ -49,9 +77,10 @@ const DashboardView = ({ vehicles, setVehicles }: DashboardProps) => {
           <button className="btn" onClick={() => generatePDFReport(vehicles)}><Download size={18} /> EXPORTAR PDF</button>
         </div>
       </header>
-
+      
       <section className="grid-3 mb-3">
         <div className="card card-decorated">
+             {/* ... stats content ... */}
           <div className="card-deco"></div>
           <h3 className="text-muted">TOTAL ACTIVOS</h3>
           <div className="stat-number">{vehicles.length}</div>
@@ -83,6 +112,34 @@ const DashboardView = ({ vehicles, setVehicles }: DashboardProps) => {
                   {vehicle.priority === 'high' && <AlertCircle size={18} color="var(--error)" />}
                 </div>
                 <p className="vehicle-model">{vehicle.model}</p>
+                
+                {/* Budget Indicator / Button */}
+                {vehicle.stage === 'diagnosis' && (
+                  <div style={{ margin: '0.5rem 0' }}>
+                    <button 
+                      onClick={() => setEditingBudgetVehicle(vehicle)}
+                      className="btn-text" 
+                      style={{ 
+                        width: '100%', 
+                        fontSize: '0.75rem', 
+                        padding: '0.4rem', 
+                        background: vehicle.budget?.isApproved ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)',
+                        border: vehicle.budget?.isApproved ? '1px solid var(--success)' : '1px solid rgba(255,255,255,0.1)',
+                        color: vehicle.budget?.isApproved ? 'var(--success)' : 'var(--text-muted)',
+                        borderRadius: '0.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <FileText size={14} />
+                      {vehicle.budget ? (vehicle.budget.isApproved ? 'PRESUPUESTO APROBADO' : 'VER PRESUPUESTO') : 'CREAR PRESUPUESTO'}
+                    </button>
+                  </div>
+                )}
+
                 <div className="card-footer mt-1">
                   <span className="text-muted entry-date">{vehicle.entryDate}</span>
                   <select value={vehicle.stage} onChange={(e) => moveVehicle(vehicle.id, e.target.value as Stage)} className="input-field small-select">

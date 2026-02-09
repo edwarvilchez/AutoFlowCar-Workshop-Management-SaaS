@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FinancialConfig } from '../types';
-
-const STORAGE_KEY = 'sgt:financial';
+import { storage } from '../lib/storage';
 
 const INITIAL_CONFIG: FinancialConfig = {
   exchangeRate: 36.50,
@@ -10,20 +9,13 @@ const INITIAL_CONFIG: FinancialConfig = {
 
 export const useFinancial = () => {
   const [config, setConfigState] = useState<FinancialConfig>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : INITIAL_CONFIG;
-    } catch {
-      return INITIAL_CONFIG;
-    }
+    // Ensure we get a valid config object, merging with initial to be safe
+    const stored = storage.financial.get();
+    return stored ? { ...INITIAL_CONFIG, ...stored } : INITIAL_CONFIG;
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-    } catch (error) {
-      console.error('Failed to save financial config:', error);
-    }
+    storage.financial.set(config);
   }, [config]);
 
   const updateRate = (newRate: number) => {

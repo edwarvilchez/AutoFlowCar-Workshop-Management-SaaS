@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Printer, Car, User, Wrench, Calendar, ClipboardList, PenTool, Link as LinkIcon, Phone, Mail, Plus, Edit3, Trash2, Save, X } from 'lucide-react';
+import { ArrowLeft, Printer, Car, User, Wrench, Calendar, ClipboardList, PenTool, Link as LinkIcon, Phone, Mail, Plus, Edit3, Trash2, Save, X, Sparkles, Loader } from 'lucide-react';
+import { getGeminiModel } from '../lib/gemini';
 import { useMemo, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { Vehicle, ServiceRecord, MaintenanceItem } from '../types';
@@ -85,6 +86,63 @@ const VehicleHistory = ({ vehicles }: VehicleHistoryProps) => {
   const [showModal, setShowModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ServiceRecord | null>(null);
   const [formData, setFormData] = useState<Partial<ServiceRecord>>({});
+  
+  // AI State
+  const [summary, setSummary] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const generateSummary = async () => {
+    if (!vehicle || !details) return;
+    setIsGenerating(true);
+    setSummary('');
+    try {
+      const model = getGeminiModel();
+      const prompt = `Actúa como un jefe de taller mecánico experto. Analiza el siguiente historial de un ${vehicle.model} (${details.vehicleInfo.year}) con ${details.vehicleInfo.mileage}km.
+      
+      Historial: ${JSON.stringify(history)}
+      Próximos mantenimientos: ${JSON.stringify(details.upcoming)}
+      
+      Genera un reporte ejecutivo breve (máx 3 parrafos) con:
+      1. Estado general del vehículo basado en lo que se le ha hecho.
+      2. Alertas de seguridad si falta algún mantenimiento crítico por el kilometraje.
+      3. Recomendación de venta cruzada (qué servicio ofrecerle ahora).
+      
+      Usa tono profesional y técnico. Formato Markdown.`;
+      
+      
+      // Attempt 1: Gemini 1.5 Flash (Faster/Cheaper)
+      try {
+        const modelFlash = getGeminiModel("gemini-1.5-flash");
+        const result = await modelFlash.generateContent(prompt);
+        const response = await result.response;
+        setSummary(response.text());
+        return; // Success!
+      } catch (e) {
+        console.warn("Flash model failed, trying Pro...", e);
+      }
+
+      // Attempt 2: Gemini Pro (Standard)
+      const modelPro = getGeminiModel("gemini-pro");
+      const result = await modelPro.generateContent(prompt);
+      const response = await result.response;
+      setSummary(response.text());
+
+
+    } catch (error: any) {
+      console.error(error);
+      let errorMessage = "Error desconocido.";
+      if (error.message) errorMessage = error.message;
+      
+      const errString = error.toString();
+      if (errString.includes('403')) errorMessage = "Error 403: Acceso denegado (VPN/API Key).";
+      if (errString.includes('404')) errorMessage = "Error 404: Modelos no disponibles. \n\nSOLUCIÓN:\n1. Revisa que tu VPN esté en EE.UU.\n2. Abre una pestaña de Incógnito (a veces el cache guarda la ubicación).\n3. Desactiva IPv6 en tu adaptador de red si persiste.";
+      if (errString.includes('API_KEY')) errorMessage = "Error: API Key no válida o no encontrada en .env";
+      
+      setSummary(errorMessage);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // LocalStorage persistence helpers
   const STORAGE_KEY = 'sgt:history';
@@ -210,6 +268,45 @@ const VehicleHistory = ({ vehicles }: VehicleHistoryProps) => {
             <InfoItem label="Nombre" value={vehicle.client} />
             <InfoItem label="Teléfono" value={details.ownerInfo.phone} />
             <InfoItem label="Correo Electrónico" value={details.ownerInfo.email} />
+          </div>
+        </section>
+
+        {/* AI Analysis Section */}
+        <section style={{ marginBottom: '3.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <Sparkles color="#a855f7" size={28} />
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 400, margin: 0, background: 'linear-gradient(to right, #a855f7, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Diagnóstico Inteligente (AI)</h2>
+          </div>
+          
+          <div className="card" style={{ padding: '2rem', background: 'rgba(168, 85, 247, 0.05)', border: '1px solid rgba(168, 85, 247, 0.2)' }}>
+            {!summary && !isGenerating && (
+               <div style={{ textAlign: 'center', padding: '1rem' }}>
+                 <p style={{ color: '#ccc', marginBottom: '1.5rem' }}>Genera un reporte técnico automático basado en el historial completo del vehículo.</p>
+                 <button onClick={generateSummary} className="btn" style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)', color: 'white', border: 'none' }}>
+                   <Sparkles size={18} /> GENERAR REPORTE CON IA
+                 </button>
+               </div>
+            )}
+
+            {isGenerating && (
+               <div style={{ textAlign: 'center', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                 <Loader className="animate-spin" size={32} color="#a855f7" />
+                 <span style={{ color: '#a855f7', fontWeight: 500 }}>Analizando historial y kilometraje...</span>
+               </div>
+            )}
+
+            {summary && (
+              <div style={{ animation: 'fadeIn 0.5s' }}>
+                <div style={{ fontSize: '1rem', lineHeight: '1.7', color: '#e2e8f0', whiteSpace: 'pre-line' }}>
+                  {summary}
+                </div>
+                <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
+                   <button onClick={generateSummary} className="btn" style={{ background: 'rgba(255,255,255,0.05)', fontSize: '0.8rem', padding: '0.5rem 1rem', color: '#ccc' }}>
+                     REGENERAR
+                   </button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

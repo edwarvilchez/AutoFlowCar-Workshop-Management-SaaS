@@ -35,6 +35,19 @@ AutoFlow es una plataforma integral de gestión para talleres mecánicos de alto
   - Gestión crud de **Métodos de Pago** (Transferencia, Pago Móvil, Zelle, Efectivo, Cripto).
 - **Reportes PDF:** Generación de informes profesionales con un solo clic, incluyendo tablas detalladas de servicios y métricas de ventas.
 
+### 🤖 Diagnóstico Inteligente con IA (Gemini)
+
+- **Análisis Predictivo:** Integración con **Google Gemini AI** para generar reportes ejecutivos de mantenimiento basados en el historial del vehículo.
+- **Asistente Técnico:** Sugerencias automáticas de servicios y detección de anomalías recurrentes.
+- **Soporte Regional:** Configuración robusta con manejo de errores específicos para regiones con restricciones (VPN/Proxy).
+
+### 📝 Gestión de Presupuestos y Cotizaciones
+
+- **Generador de Presupuestos:** Creación rápida de cotizaciones detalladas incluyendo repuestos y mano de obra.
+- **Cálculo Dual:** Conversión automática de montos a Moneda Local (VES) según tasa del día.
+- **Flujo de Aprobación:** Sistema de bloqueo que impide avanzar reparaciones sin la aprobación explícita del cliente.
+- **PDF Export:** Descarga de presupuestos formales con un clic.
+
 ## 🎨 Diseño y Experiencia de Usuario (UI/UX)
 
 - **Estética High-Tech:** Basado en el concepto de _Glassmorphism_ y alto contraste.
