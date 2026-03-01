@@ -4,10 +4,13 @@ AutoFlow es una plataforma integral de gestión para talleres mecánicos de alto
 
 ## 🌟 Características Principales
 
-### 🔐 Gestión de Accesos y Cuentas
+### 🔐 Gestión de Accesos y RBAC (Role-Based Access Control)
 
-- **Módulo de Login/Registro:** Interfaz profesional para la gestión de usuarios, lista para conectar con sistemas de autenticación reales.
-- **Identidad Corporativa:** Diseño neutral personalizable que permite a cada taller mantener su presencia de marca.
+- **Sistema de Roles:**
+  - **Administrador:** Control total, gestión de analistas y módulo financiero completo.
+  - **Analista:** Gestión operativa de vehículos, inventario y carga de pagos de clientes.
+  - **Cliente:** Interfaz simplificada para solicitar, reagendar o eliminar sus propias citas.
+- **Seguridad:** Rutas protegidas mediante `ProtectedRoute` y persistencia de sesión en `localStorage`.
 
 ### 📅 Centro de Reservaciones Inteligente
 
@@ -15,12 +18,18 @@ AutoFlow es una plataforma integral de gestión para talleres mecánicos de alto
   1. **Información:** Captura de datos del cliente y vehículo con campos validados.
   2. **Diagnóstico Inicial:** Selección técnica de servicios requeridos con iconos descriptivos.
   3. **Agenda:** Selector dinámico de fecha y hora para evitar sobrecarga operativa.
+- **Gestión de Citas (Cliente):** Los clientes pueden ver su historial, reagendar mediante edición o eliminar citas pendientes.
+
+### 📱 Notificaciones Multicanal
+
+- **WhatsApp Direct:** Generación automática de mensajes con formato profesional para confirmar citas mediante `wa.me`.
+- **Email Digest:** Envío de resúmenes de servicios y confirmaciones de agenda directamente al correo del cliente.
 
 ### 📊 Dashboard Operativo (Workflow Kanban)
 
-- **Visualización en Tiempo Real:** Control total de las unidades en el predio mediante 5 etapas críticas: Recepción, Diagnóstico, Ejecución, Control de Calidad y Egreso.
-- **Métricas de Rendimiento:** KPIs visibles de capacidad operativa, ingresos estimados y eficiencia del taller.
-- **Interactividad Total:** Arrastre y cambio de estados vehicular con actualización instantánea de contadores.
+- **Visualización en Tiempo Real:** Control total de las unidades mediante 5 etapas críticas: Recepción, Diagnóstico, Ejecución, Control de Calidad y Egreso.
+- **Acciones Rápidas:** Botón de "Cargar Pago" para analistas y validación de presupuesto aprobado para avanzar a ejecución.
+- **Interactividad:** Cambio de estados vehicular con actualización instantánea de contadores.
 
 ### 🍱 Gestión de Inventario y Stock
 

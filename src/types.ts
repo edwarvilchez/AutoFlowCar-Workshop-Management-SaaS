@@ -82,3 +82,16 @@ export interface Vehicle {
   budget?: VehicleBudget; // Linked budget
 }
 
+export interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'analyst' | 'client';
+  name: string;
+  phone?: string;
+  photoUrl?: string;
+}
+
+export interface Profile extends User {
+  workshopName?: string;
+  workshopLogo?: string;
+}

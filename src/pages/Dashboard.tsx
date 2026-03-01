@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import { Navigate } from 'react-router-dom';
 import type { Vehicle, Stage } from '../types'
 import NewVehicleForm from '../components/NewVehicleForm'
 import BudgetModal from '../components/BudgetModal';
-import { AlertCircle, Plus, Download, FileText } from 'lucide-react'
+import { AlertCircle, Plus, Download, FileText, Banknote } from 'lucide-react'
 import { STAGES } from '../lib/constants'
 import { generatePDFReport } from '../lib/report'
+import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardProps {
   vehicles: Vehicle[];
@@ -13,8 +15,11 @@ interface DashboardProps {
 }
 
 const DashboardView = ({ vehicles, setVehicles }: DashboardProps) => {
+  const { user } = useAuth();
   const [showNewVehicleModal, setShowNewVehicleModal] = useState(false);
   const [editingBudgetVehicle, setEditingBudgetVehicle] = useState<Vehicle | null>(null);
+
+  if (user?.role === 'client') return <Navigate to="/booking" />;
 
   const moveVehicle = (id: string, newStage: Stage) => {
     const vehicle = vehicles.find(v => v.id === id);
@@ -140,11 +145,19 @@ const DashboardView = ({ vehicles, setVehicles }: DashboardProps) => {
                   </div>
                 )}
 
-                <div className="card-footer mt-1">
-                  <span className="text-muted entry-date">{vehicle.entryDate}</span>
-                  <select value={vehicle.stage} onChange={(e) => moveVehicle(vehicle.id, e.target.value as Stage)} className="input-field small-select">
-                    {STAGES.map(s => <option key={s.id} value={s.id}>{s.label.toUpperCase()}</option>)}
-                  </select>
+                <div className="card-footer mt-1" style={{ flexDirection: 'column', gap: '0.5rem' }}>
+                  <div className="flex-row space-between" style={{ width: '100%' }}>
+                    <span className="text-muted entry-date">{vehicle.entryDate}</span>
+                    <select value={vehicle.stage} onChange={(e) => moveVehicle(vehicle.id, e.target.value as Stage)} className="input-field small-select" disabled={user?.role === 'analyst'}>
+                      {STAGES.map(s => <option key={s.id} value={s.id}>{s.label.toUpperCase()}</option>)}
+                    </select>
+                  </div>
+                  
+                  {(user?.role === 'analyst' || user?.role === 'admin') && (
+                      <button className="btn btn-ghost" style={{ width: '100%', fontSize: '0.7rem', height: '2rem', color: 'var(--success)', borderColor: 'rgba(16, 185, 129, 0.2)' }} onClick={() => alert('Módulo de Carga de Pago Abierto')}>
+                          <Banknote size={14} /> CARGAR PAGO
+                      </button>
+                  )}
                 </div>
               </div>
             ))}

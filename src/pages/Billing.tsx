@@ -1,10 +1,15 @@
 import React from 'react';
 import { Download, TrendingUp, ShieldCheck } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import { generatePDFReport } from '../lib/report';
+import { useAuth } from '../contexts/AuthContext';
 import { useFinancial } from '../hooks/useFinancial';
 
 const BillingView = ({ vehicles }: any) => {
+  const { user } = useAuth();
   const { config } = useFinancial();
+
+  if (user?.role !== 'admin') return <Navigate to="/" />;
   
   const formatCurrency = (amount: number, currency: 'USD' | 'VES') => {
     return new Intl.NumberFormat(currency === 'USD' ? 'en-US' : 'es-VE', {

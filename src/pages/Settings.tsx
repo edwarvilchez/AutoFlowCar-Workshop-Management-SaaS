@@ -1,28 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import PaymentSettings from '../components/PaymentSettings';
-import { ArrowRight, CreditCard, User, Plus, Lock } from 'lucide-react';
+import { ArrowRight, CreditCard, User, Plus, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
-const SettingsView = ({ onLogout }: any) => {
+const SettingsView = () => {
+  const { user, profile: authProfile, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'general' | 'payments'>('general');
   const [showProfile, setShowProfile] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
-  const [profile, setProfile] = useState({ name: '', email: '' });
+  
+  const [tempProfile, setTempProfile] = useState({ name: user?.name || '', email: user?.email || '' });
   const [themeColor, setThemeColor] = useState<string>(() => getComputedStyle(document.documentElement).getPropertyValue('--primary') || '#009ec7');
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('sgt:profile');
-      if (raw) setProfile(JSON.parse(raw));
-    } catch {}
-  }, []);
+    if (user) {
+      setTempProfile({ name: user.name, email: user.email });
+    }
+  }, [user]);
 
   const saveProfile = () => {
-    try { localStorage.setItem('sgt:profile', JSON.stringify(profile)); } catch {}
+    // In a real app, we would call an updateProfile function from AuthContext
+    alert('Perfil actualizado (Simulado)');
     setShowProfile(false);
   };
 
   const applyTheme = () => {
-    try { document.documentElement.style.setProperty('--primary', themeColor); localStorage.setItem('sgt:theme', JSON.stringify({ primary: themeColor })); } catch {}
+    try { 
+      document.documentElement.style.setProperty('--primary', themeColor); 
+      localStorage.setItem('sgt:theme', JSON.stringify({ primary: themeColor })); 
+    } catch {}
     setShowCustomize(false);
   };
 
@@ -48,7 +54,7 @@ const SettingsView = ({ onLogout }: any) => {
           <div className="icon-square"><CreditCard size={24} /></div>
           <h3 className="card-title">MÉTODOS DE PAGO</h3>
           <p className="text-muted card-desc">Gestiona cuentas bancarias, pago móvil, Zelle y tasa de cambio (Divisas/Bolívares).</p>
-          <button className="btn btn-block" onClick={() => setActiveTab('payments')}>ADMINISTRAR</button>
+          <button className="btn btn-block" onClick={(e) => { e.stopPropagation(); setActiveTab('payments'); }}>ADMINISTRAR</button>
         </div>
 
         <div className="card card-pad-2-5">
@@ -66,10 +72,10 @@ const SettingsView = ({ onLogout }: any) => {
         </div>
 
         <div className="card dashed-error">
-          <div className="icon-square icon-square-danger"><Lock size={24} color="var(--error)" /></div>
-          <h3 className="error-title">SESIÓN</h3>
+          <div className="icon-square icon-square-danger"><LogOut size={24} color="var(--error)" /></div>
+          <h3 className="error-title" style={{ color: 'var(--error)' }}>SESIÓN</h3>
           <p className="text-muted card-desc">Finaliza tu jornada de trabajo actual de forma segura.</p>
-          <button className="btn btn-danger" onClick={onLogout}>LOGOUT</button>
+          <button className="btn btn-danger" onClick={() => { if(window.confirm('¿Cerrar sesión?')) logout(); }}>CERRAR SESIÓN</button>
         </div>
       </div>
 
@@ -80,15 +86,19 @@ const SettingsView = ({ onLogout }: any) => {
             <h3 className="card-title">Editar Perfil</h3>
             <div style={{ marginTop: '1rem' }}>
               <label className="form-label">Nombre</label>
-              <div className="input-container"><input className="input-field" value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} /></div>
+              <div className="input-container">
+                <input className="input-field" value={tempProfile.name} onChange={e => setTempProfile({ ...tempProfile, name: e.target.value })} />
+              </div>
             </div>
             <div style={{ marginTop: '1rem' }}>
               <label className="form-label">Email</label>
-              <div className="input-container"><input className="input-field" value={profile.email} onChange={e => setProfile({ ...profile, email: e.target.value })} /></div>
+              <div className="input-container">
+                <input className="input-field" value={tempProfile.email} onChange={e => setTempProfile({ ...tempProfile, email: e.target.value })} />
+              </div>
             </div>
             <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
               <button className="btn" onClick={() => setShowProfile(false)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={saveProfile}>Guardar</button>
+              <button className="btn btn-primary" onClick={saveProfile}>Guardar Cambios</button>
             </div>
           </div>
         </div>
@@ -97,14 +107,16 @@ const SettingsView = ({ onLogout }: any) => {
       {showCustomize && (
         <div className="mobile-overlay open" onClick={() => setShowCustomize(false)}>
           <div className="card" style={{ maxWidth: 720, margin: '6rem auto' }} onClick={(e) => e.stopPropagation()}>
-            <h3 className="card-title">Personalización</h3>
+            <h3 className="card-title">Personalización Visual</h3>
             <div style={{ marginTop: '1rem' }}>
-              <label className="form-label">Color primario</label>
-              <div className="input-container"><input className="input-field" type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} /></div>
+              <label className="form-label">Color primario del tema</label>
+              <div className="input-container">
+                <input className="input-field" type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} />
+              </div>
             </div>
             <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
               <button className="btn" onClick={() => setShowCustomize(false)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={applyTheme}>Aplicar</button>
+              <button className="btn btn-primary" onClick={applyTheme}>Aplicar Tema</button>
             </div>
           </div>
         </div>
